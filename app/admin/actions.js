@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function login(prevStateOrFormData, formData) {
@@ -92,4 +93,43 @@ export async function gantiPassword(prevStateOrFormData, formData) {
   }
 
   return { success: "Password berhasil diganti." };
+}
+
+export async function tambahProduk(formData) {
+  // Wajib periksa bahwa admin sudah login di server (Aturan keamanan #3)
+  const supabase = await createAdminClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("Aksi ditolak: Anda harus login sebagai admin.");
+  }
+
+  const nama = formData.get("nama")?.toString().trim();
+  const harga = parseInt(formData.get("harga")?.toString() || "0", 10);
+  const kategori = formData.get("kategori")?.toString().trim() || null;
+  const foto_url = formData.get("foto_url")?.toString().trim() || null;
+  const deskripsi = formData.get("deskripsi")?.toString().trim() || null;
+
+  if (!nama) {
+    throw new Error("Nama produk wajib diisi.");
+  }
+
+  const { error } = await supabase.from("produk").insert({
+    nama,
+    harga,
+    kategori,
+    foto_url,
+    deskripsi,
+  });
+
+  if (error) {
+    throw new Error(`Gagal menyimpan produk: ${error.message}`);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  redirect("/admin");
 }
