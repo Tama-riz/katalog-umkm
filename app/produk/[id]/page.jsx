@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
-import CatatanBelumAktif from "@/components/CatatanBelumAktif";
-import { cariProdukContoh } from "@/lib/data-contoh";
+import { createServerClient } from "@/lib/supabase/server";
 import { formatRupiah } from "@/lib/format";
 
-// US-02: halaman ini masih memakai data contoh.
-// Tugas peserta: ambil satu produk dari Supabase berdasarkan id, di sisi server.
 export default async function HalamanDetailProduk({ params }) {
   const { id } = await params;
-  const produk = cariProdukContoh(id);
 
-  if (!produk) {
+  const supabase = createServerClient();
+  const { data: produk, error } = await supabase
+    .from("produk")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !produk) {
     notFound();
   }
 
@@ -56,7 +59,6 @@ export default async function HalamanDetailProduk({ params }) {
 
           <div className="flex flex-col gap-2.5 pt-1">
             <TombolWhatsApp produk={produk} />
-            <CatatanBelumAktif>Tombol pesan belum berfungsi: lihat US-03.</CatatanBelumAktif>
           </div>
 
           <div className="mt-2 rounded-2xl border border-garis bg-permukaan/70 p-4 text-xs text-teks-lembut space-y-1.5 shadow-xs">
