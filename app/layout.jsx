@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { toko } from "@/lib/toko";
 
 export const metadata = {
-  title: toko.nama,
+  title: `${toko.nama} - Katalog UMKM`,
   description: toko.tagline,
 };
 
@@ -16,10 +16,10 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         />
       </head>
-      <body className="flex min-h-screen flex-col font-sans antialiased">
+      <body className="flex min-h-screen flex-col font-sans antialiased bg-latar text-teks">
         <Header />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4">{children}</main>
         <Footer />
