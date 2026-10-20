@@ -1,12 +1,26 @@
 import KartuProduk from "@/components/KartuProduk";
-import CatatanBelumAktif from "@/components/CatatanBelumAktif";
-import { produkContoh } from "@/lib/data-contoh";
+import { createServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
 
-// US-01: halaman ini masih memakai data contoh.
-// Tugas peserta: ambil daftar produk dari tabel "produk" di Supabase, di sisi server.
-export default function HalamanKatalog() {
-  const daftarProduk = produkContoh;
+export default async function HalamanKatalog() {
+  let daftarProduk = [];
+  let pesanError = null;
+
+  try {
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from("produk")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      pesanError = `Gagal memuat produk: ${error.message}`;
+    } else {
+      daftarProduk = data || [];
+    }
+  } catch (err) {
+    pesanError = `Gagal terhubung ke database: ${err.message}`;
+  }
 
   return (
     <>
@@ -87,20 +101,34 @@ export default function HalamanKatalog() {
             </h2>
             <p className="text-xs text-teks-lembut">Pilih produk favorit Anda untuk dipesan via WhatsApp</p>
           </div>
-          <span className="self-start text-xs font-semibold text-teks-lembut sm:self-auto">
-            {daftarProduk.length} Produk Tersedia
-          </span>
+          {!pesanError && (
+            <span className="self-start text-xs font-semibold text-teks-lembut sm:self-auto">
+              {daftarProduk.length} Produk Tersedia
+            </span>
+          )}
         </div>
 
-        <CatatanBelumAktif>
-          Masih data contoh. Sambungkan ke database: lihat US-01 di docs/user-stories.md.
-        </CatatanBelumAktif>
-
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {daftarProduk.map((produk) => (
-            <KartuProduk key={produk.id} produk={produk} />
-          ))}
-        </div>
+        {pesanError ? (
+          <div className="rounded-2xl border border-bahaya/30 bg-permukaan p-6 text-center">
+            <p className="font-semibold text-bahaya">{pesanError}</p>
+            <p className="mt-1 text-xs text-teks-lembut">
+              Silakan periksa konfigurasi database atau muat ulang halaman.
+            </p>
+          </div>
+        ) : daftarProduk.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-garis bg-permukaan p-10 text-center">
+            <p className="text-base font-semibold text-teks">Belum ada produk</p>
+            <p className="mt-1 text-xs text-teks-lembut">
+              Produk akan muncul di sini setelah ditambahkan ke database.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            {daftarProduk.map((produk) => (
+              <KartuProduk key={produk.id} produk={produk} />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );
